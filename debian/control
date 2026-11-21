@@ -1,0 +1,19 @@
+Source: quirinux-planta-de-camara
+Section: graphics
+Priority: optional
+Maintainer: Charlie Martínez <info@quirinux.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://quirinux.org/planta-de-camara/
+
+Package: quirinux-planta-de-camara
+Architecture: all
+Depends: ${misc:Depends}, python3, python3-gi, gir1.2-gtk-3.0,
+ gir1.2-webkit2-4.1 | gir1.2-webkit2-4.0
+Description: Planta de cámara para cine y animación (Quirinux)
+ Aplicación para dibujar plantas de cámara: escenas, planos, cámaras con su
+ cono de visión según la lente, actores, objetos y flechas de movimiento.
+ Exporta a PDF y guarda/abre proyectos en formato .json.
+ .
+ Se ejecuta en una ventana propia basada en WebKitGTK, sin Electron.

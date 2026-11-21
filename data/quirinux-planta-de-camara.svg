@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Planta de cámara: cámara vista desde arriba y su cono de visión. Fondo transparente. -->
+  <path d="M116 128 L236 56 A140 140 0 0 1 236 200 Z" fill="#8a4f96" opacity=".35"/>
+  <path d="M116 128 L236 56 M116 128 L236 200" fill="none" stroke="#8a4f96" stroke-width="10" stroke-linecap="round"/>
+  <rect x="20" y="92" width="72" height="72" rx="14" fill="#8a4f96"/>
+  <path d="M92 108 L120 94 L120 162 L92 148 Z" fill="#8a4f96"/>
+</svg>

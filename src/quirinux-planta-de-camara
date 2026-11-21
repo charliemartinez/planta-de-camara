@@ -1,0 +1,245 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#
+# Quirinux Planta de Cámara - visor mínimo basado en WebKitGTK
+# Programado por Charlie Martínez <cmartinez@quirinux.org>
+# © Charlie Martínez 2023 - GPLv2
+#
+# Abre la aplicación (HTML/JS) en una ventana propia, guarda los datos del
+# navegador en ~/.local/share/quirinux-planta-de-camara y gestiona las
+# descargas (.json / .pdf) con un diálogo "Guardar como". Al cerrar, avisa si
+# hay cambios sin guardar.
+
+import os
+import sys
+
+# WebKitGTK puede mostrar la ventana completamente negra en algunos equipos
+# (drivers NVIDIA, algunas Intel/AMD, máquinas virtuales, Wayland) por el
+# renderizador DMABUF. Se desactiva por defecto; es una app de canvas 2D y
+# no se nota diferencia de rendimiento. Para forzarlo: QPC_GPU=1.
+# Debe hacerse antes de importar WebKit2.
+if os.environ.get("QPC_GPU") != "1":
+    os.environ.setdefault("WEBKIT_DISABLE_DMABUF_RENDERER", "1")
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+try:
+    gi.require_version("WebKit2", "4.1")
+except ValueError:
+    gi.require_version("WebKit2", "4.0")
+from gi.repository import Gdk, Gio, GLib, Gtk, WebKit2
+
+APP_ID = "quirinux-planta-de-camara"
+APP_NAME = "Planta de Cámara"
+HTML_NAME = "planta-de-camara.html"
+
+
+def find_html():
+    """Busca el HTML: variable de entorno, instalación del sistema o árbol de fuentes."""
+    here = os.path.dirname(os.path.realpath(__file__))
+    candidates = [
+        os.environ.get("QPC_HTML", ""),
+        "/usr/share/%s/%s" % (APP_ID, HTML_NAME),
+        os.path.join(here, HTML_NAME),
+        os.path.join(here, "..", "share", APP_ID, HTML_NAME),
+    ]
+    for c in candidates:
+        if c and os.path.isfile(c):
+            return os.path.realpath(c)
+    return None
+
+
+class App(Gtk.Window):
+    def __init__(self, html_path):
+        super().__init__(title=APP_NAME)
+        self.set_default_size(1366, 860)
+        self.set_icon_name(APP_ID)
+        self.connect("destroy", Gtk.main_quit)
+        self.connect("delete-event", self.on_delete)
+        self._cerrar = False       # True cuando ya se ha decidido salir
+        self._esperando = False    # esperando la respuesta de la página
+        self.connect("key-press-event", self.on_key)
+
+        data = os.path.join(GLib.get_user_data_dir(), APP_ID)
+        cache = os.path.join(GLib.get_user_cache_dir(), APP_ID)
+        os.makedirs(data, exist_ok=True)
+        os.makedirs(cache, exist_ok=True)
+
+        # Almacenamiento persistente propio (localStorage de la app)
+        manager = WebKit2.WebsiteDataManager(
+            base_data_directory=data, base_cache_directory=cache
+        )
+        self.ctx = WebKit2.WebContext.new_with_website_data_manager(manager)
+        self.ctx.connect("download-started", self.on_download_started)
+
+        self.view = WebKit2.WebView.new_with_context(self.ctx)
+        settings = self.view.get_settings()
+        settings.set_property("enable-developer-extras", False)
+        settings.set_property("enable-javascript", True)
+        settings.set_property("enable-site-specific-quirks", False)
+        self.view.connect("context-menu", lambda *a: True)  # sin menú contextual
+        self.view.connect("decide-policy", self.on_decide_policy)
+        self.view.connect("create", lambda *a: None)  # no abrir ventanas nuevas
+        # La página necesita saber que está dentro de la ventana de escritorio
+        # (así "Guardar" solo cuenta como guardado cuando la descarga termina).
+        script = WebKit2.UserScript(
+            "window.QPC_DESKTOP = true;",
+            WebKit2.UserContentInjectedFrames.TOP_FRAME,
+            WebKit2.UserScriptInjectionTime.START, None, None)
+        self.view.get_user_content_manager().add_script(script)
+        self.add(self.view)
+
+        self.view.load_uri(Gio.File.new_for_path(html_path).get_uri())
+
+    # ---------- Cerrar la ventana ----------
+    def js(self, code, callback=None):
+        try:
+            self.view.run_javascript(code, None, callback)
+        except Exception:
+            if callback:
+                callback(None, None)
+
+    def on_delete(self, _w, _ev):
+        # Se pregunta a la página si hay cambios sin guardar antes de cerrar.
+        if self._cerrar:
+            return False
+        if not self._esperando:
+            self._esperando = True
+            self.js("window.qpcSinGuardar ? window.qpcSinGuardar() : false",
+                    self.on_dirty_result)
+            # si la página no contesta, no dejamos la ventana sin poder cerrarse
+            GLib.timeout_add(2000, self.on_dirty_timeout)
+        return True  # de momento no se cierra; se decide en on_dirty_result
+
+    def on_dirty_result(self, view, res, *_):
+        if not self._esperando:
+            return
+        self._esperando = False
+        dirty = False
+        try:
+            dirty = view.run_javascript_finish(res).get_js_value().to_boolean()
+        except Exception:
+            pass
+        if dirty and not self.confirm_exit():
+            return
+        self._cerrar = True
+        self.destroy()
+
+    def on_dirty_timeout(self):
+        if self._esperando:
+            self._esperando = False
+            self._cerrar = True
+            self.destroy()
+        return False
+
+    def confirm_exit(self):
+        dlg = Gtk.MessageDialog(
+            transient_for=self, modal=True, message_type=Gtk.MessageType.WARNING,
+            text="Hay cambios sin guardar")
+        dlg.format_secondary_text(
+            "Si sales ahora se perderá el trabajo que no hayas guardado "
+            "con el botón «Guardar».")
+        dlg.add_buttons("Cancelar", Gtk.ResponseType.CANCEL,
+                        "Salir sin guardar", Gtk.ResponseType.OK)
+        dlg.set_default_response(Gtk.ResponseType.CANCEL)
+        resp = dlg.run()
+        dlg.destroy()
+        return resp == Gtk.ResponseType.OK
+
+    # ---------- Atajos de ventana ----------
+    def on_key(self, _w, ev):
+        ctrl = ev.state & Gdk.ModifierType.CONTROL_MASK
+        key = Gdk.keyval_name(ev.keyval) or ""
+        if ctrl and key in ("q", "Q"):
+            self.close()
+            return True
+        if key == "F11":
+            win = self.get_window()
+            if win and win.get_state() & Gdk.WindowState.FULLSCREEN:
+                self.unfullscreen()
+            else:
+                self.fullscreen()
+            return True
+        if ctrl and key in ("plus", "equal", "KP_Add"):
+            self.view.set_zoom_level(min(3.0, self.view.get_zoom_level() + 0.1))
+            return True
+        if ctrl and key in ("minus", "KP_Subtract"):
+            self.view.set_zoom_level(max(0.4, self.view.get_zoom_level() - 0.1))
+            return True
+        if ctrl and key in ("0", "KP_0"):
+            self.view.set_zoom_level(1.0)
+            return True
+        return False  # el resto (Ctrl+Z, Ctrl+D...) lo gestiona la app
+
+    # ---------- Enlaces ----------
+    def on_decide_policy(self, _view, decision, dtype):
+        if dtype == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
+            decision.ignore()
+            return True
+        if dtype == WebKit2.PolicyDecisionType.NAVIGATION_ACTION:
+            uri = decision.get_navigation_action().get_request().get_uri() or ""
+            if uri.startswith(("http://", "https://")):
+                decision.ignore()
+                try:
+                    Gtk.show_uri_on_window(self, uri, Gdk.CURRENT_TIME)
+                except Exception:
+                    pass
+                return True
+        return False
+
+    # ---------- Descargas (Guardar .json / Generar PDF) ----------
+    def on_download_started(self, _ctx, download):
+        download.connect("decide-destination", self.on_decide_destination)
+        download.connect("failed", self.on_download_failed)
+        # cuando termina la descarga, la página da el proyecto por guardado
+        download.connect("finished",
+                         lambda *_: self.js("window.qpcGuardado && window.qpcGuardado()"))
+
+    def on_decide_destination(self, download, suggested):
+        dlg = Gtk.FileChooserDialog(
+            title="Guardar como", parent=self, action=Gtk.FileChooserAction.SAVE
+        )
+        dlg.add_buttons("Cancelar", Gtk.ResponseType.CANCEL,
+                        "Guardar", Gtk.ResponseType.ACCEPT)
+        dlg.set_do_overwrite_confirmation(True)
+        dlg.set_current_name(suggested or "planta-de-camara.json")
+        docs = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOCUMENTS)
+        if docs and os.path.isdir(docs):
+            dlg.set_current_folder(docs)
+        resp = dlg.run()
+        uri = dlg.get_uri()
+        dlg.destroy()
+        if resp == Gtk.ResponseType.ACCEPT and uri:
+            download.set_destination(uri)
+        else:
+            self.js("window.qpcGuardadoCancelado && window.qpcGuardadoCancelado()")
+            download.cancel()
+        return True
+
+    def on_download_failed(self, _download, error):
+        msg = Gtk.MessageDialog(
+            transient_for=self, modal=True, message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK, text="No se pudo guardar el archivo",
+        )
+        msg.format_secondary_text(str(error))
+        msg.run()
+        msg.destroy()
+
+
+def main():
+    GLib.set_prgname(APP_ID)
+    GLib.set_application_name(APP_NAME)
+    html = find_html()
+    if not html:
+        sys.stderr.write("No se encontró %s\n" % HTML_NAME)
+        return 1
+    win = App(html)
+    win.show_all()
+    Gtk.main()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

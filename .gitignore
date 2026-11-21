@@ -1,0 +1,10 @@
+# restos de construir el .deb
+debian/.debhelper/
+debian/*.debhelper*
+debian/*.substvars
+debian/files
+debian/quirinux-planta-de-camara/
+*.deb
+*.buildinfo
+*.changes
+*.tar.gz

@@ -1,0 +1,37 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+
+Exec=quirinux-planta-de-camara
+Icon=quirinux-planta-de-camara
+Terminal=false
+Categories=Preproduccion;
+
+StartupWMClass=quirinux-planta-de-camara
+
+
+Name[en]=Camera Layout
+Name[es]=Planta de Cámara
+Name[gl]=Planta de Cámara
+Name[fr]=Plan de Caméra
+Name[it]=Pianta delle Inquadrature
+Name[de]=Kameraplan
+Name[pt]=Planta de Câmara
+Name[ru]=План расположения камер
+Name[hu]=Kameraterv
+
+Comment[en]=Draws camera layouts by scene and shot.
+Comment[es]=Dibuja plantas de cámara por escenas y planos.
+Comment[gl]=Debuxa plantas de cámara por escenas e planos.
+Comment[fr]=Dessine des plans de caméra par scène et par plan.
+Comment[it]=Disegna piante delle inquadrature per scena e per ripresa.
+
+Keywords[en]=camera;layout;shot;scene;storyboard;film;cinema;animation;camera plan;shot planning
+Keywords[es]=cámara;planta;plano;escena;storyboard;cine;animación;encuadre;rodaje;puesta en escena
+Keywords[gl]=cámara;planta;plano;escena;storyboard;cinema;animación;enquadramento;rodaxe;posta en escena
+Keywords[fr]=caméra;plan;scène;storyboard;cinéma;animation;cadrage;tournage;découpage
+Keywords[it]=camera;pianta;inquadratura;scena;storyboard;cinema;animazione;regia;ripresa;sceneggiatura
+Keywords[de]=Kamera;Kameraplan;Aufnahme;Einstellung;Szene;Storyboard;Film;Kino;Animation;Bildgestaltung
+Keywords[pt]=câmara;planta;plano;cena;storyboard;cinema;animação;enquadramento;filmagem;realização
+Keywords[ru]=камера;план;раскадровка;сцена;кино;анимация;кадр;съёмка;композиция
+Keywords[hu]=kamera;kameraterv;beállítás;jelenet;storyboard;film;mozi;animáció;képkivágás;forgatás

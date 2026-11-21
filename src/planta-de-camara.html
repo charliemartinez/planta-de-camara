@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<!--
+  Planta de cámara - programado por Charlie Martínez <cmartinez@quirinux.org>
+  Quirinux GNU/Linux - https://quirinux.org - Licencia GPLv2
+  Todo en un solo archivo: HTML + CSS + JavaScript, sin dependencias.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planta de cámara</title>
+<style>html,body{margin:0;padding:0;height:100%;background:#565759}</style>
+</head>
+<body>
+<div id="sp-app"></div>
+<script>
+/*
+ * Planta de cámara
+ * Programado por Charlie Martínez <cmartinez@quirinux.org>
+ * Quirinux GNU/Linux - https://quirinux.org
+ * © 2023 Charlie Martínez - Licencia GPLv2
+ *
+ * Mejoras sugeridas por Gustavo Deveze (ver el botón "Agradecimientos").
+ */
+(function(){
+var root=document.getElementById("sp-app");if(!root)return;
+var CSS="#sp-app{--bg:#565759;--pn:#cfb8e5;--bd:#041738;--tx:#1f2430;--ac:#684870;--mu:#000;display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui,sans-serif;border:0;overflow:hidden;position:relative;box-sizing:border-box;width:100%;max-width:100%;margin:0;padding:0;float:none;text-align:left}\n#sp-app *{box-sizing:border-box}\n#sp-app header,#sp-app main,#sp-app aside{margin:0;float:none;position:static;max-width:none;box-shadow:none;border-radius:0}\n#sp-app main{padding:0;width:auto}\n#sp-app button,#sp-app select,#sp-app input,#sp-app textarea{margin:0;min-height:0;box-shadow:none;text-transform:none;letter-spacing:normal;font:inherit;line-height:1.3}\n#sp-app h3{font-family:inherit;font-weight:600;line-height:1.3}\n#sp-app table{margin:0}\n#sp-app canvas{max-width:none}\n#sp-app header{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--pn);border-bottom:1px solid var(--bd);align-items:center}\n#sp-app button,#sp-app select,#sp-app input,#sp-app textarea{background:#fff;color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;font:inherit}\n#sp-app button{cursor:pointer}\n#sp-app button:hover{border-color:var(--ac)}\n#sp-app button.on,#sp-app button.pri{background:var(--ac);color:#fff;border-color:var(--ac)}\n#sp-app button:disabled{opacity:.4;cursor:default}\n#sp-app .cr{margin-left:auto;align-self:flex-end;position:sticky;right:0;white-space:nowrap;font-size:11px;line-height:1;color:#4a4a55;user-select:none;padding-left:12px}\n#sp-app .cr .agr{background:none;border:0;border-radius:3px;padding:2px 5px;margin:0;color:#2b1535;font-size:11px;font-weight:600;line-height:1;text-decoration:underline;cursor:pointer}\n#sp-app .cr .agr:hover{background:rgba(104,72,112,.2)}\n#sp-app .sep{width:1px;height:24px;background:var(--bd);margin:0 4px}\n#sp-app main{flex:1;display:flex;min-height:0}\n#sp-app #wrap{flex:1;position:relative;min-width:0;min-height:200px}\n#sp-app canvas#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none}\n#sp-app aside{width:300px;background:var(--pn);border-left:1px solid var(--bd);overflow:auto;padding:10px}\n#sp-app h3{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}\n#sp-app label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}\n#sp-app label input,#sp-app label select{width:150px}\n#sp-app input[type=color]{padding:0;height:30px}\n#sp-app textarea{width:100%;resize:vertical}\n#sp-app .row{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}\n#sp-app table{width:100%;border-collapse:collapse;font-size:13px}\n#sp-app td,#sp-app th{padding:4px;border-bottom:1px solid var(--bd);text-align:left}\n#sp-app td input{width:100%;padding:3px 5px}\n#sp-app tr.sel{background:#e9ddf5}\n#sp-app .hint{color:var(--mu);font-size:12px}\n#sp-app #tlw{flex:none;height:182px;overflow-x:auto;overflow-y:hidden;background:var(--pn);border-top:2px solid var(--bd);padding:6px 8px}\n#sp-app #tl{display:flex;gap:10px;height:100%;align-items:stretch;width:max-content;min-width:100%}\n#sp-app .sc{display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:8px;padding:4px 6px;background:rgba(255,255,255,.35)}\n#sp-app .sc.cur{border:2px solid var(--ac);background:rgba(255,255,255,.7)}\n#sp-app .sn{font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}\n#sp-app .ps{display:flex;gap:6px}\n#sp-app .pt{cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:11px;max-width:132px}\n#sp-app .pt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}\n#sp-app .pt canvas{width:128px;height:82px;border:2px solid var(--bd);background:#fff;border-radius:4px}\n#sp-app .pt.cur canvas{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac)}\n#sp-app .add{align-self:center;white-space:nowrap}\n#sp-app #agm{position:absolute;inset:0;background:rgba(10,5,20,.62);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}\n#sp-app #agm[hidden]{display:none}\n#sp-app #agm .box{background:#fff;color:var(--tx);border:2px solid var(--ac);border-radius:10px;max-width:580px;width:100%;max-height:100%;overflow:auto;padding:16px 20px}\n#sp-app #agm h2{margin:0 0 8px;font-size:18px;color:var(--ac)}\n#sp-app #agm p{margin:0 0 8px}\n#sp-app #agm ol{margin:0 0 14px;padding-left:22px}\n#sp-app #agm li{margin:5px 0}\n@media(max-width:800px){#sp-app main{flex-direction:column}\n#sp-app aside{width:100%;max-height:40%;border-left:0;border-top:1px solid var(--bd)}\n#sp-app #tlw{height:150px}}";
+var HTML="<header id=\"tb\"><button id=\"bLoad\" title=\"Abrir un proyecto guardado (.json)\">Abrir…</button><button id=\"bSave\" title=\"Guardar el proyecto (.json)\">Guardar</button><span class=\"sep\"></span><input id=\"proj\" placeholder=\"Proyecto\" style=\"width:230px\"><span class=\"sep\"></span><button id=\"bUndo\" title=\"Deshacer (Ctrl+Z o Ctrl+D)\">↶ Deshacer</button><button id=\"bRedo\" title=\"Rehacer (Ctrl+Y o Ctrl+Mayús+Z)\">↷ Rehacer</button><span class=\"sep\"></span><button data-tool=\"select\" class=\"on\">Seleccionar</button><button data-tool=\"add:cam\">+ Cámara</button><button data-tool=\"add:actor\">+ Actor</button><select id=\"propSel\"><option value=\"\">+ Objeto…</option></select><button data-tool=\"add:text\">+ Texto</button><button data-tool=\"path\">Flecha de movimiento</button><span class=\"sep\"></span><select id=\"pr\"><option value=\"all\">PDF: todas las escenas</option><option value=\"one\">PDF: solo esta escena</option></select><select id=\"pf\" title=\"Diseño de las páginas del PDF\"><option value=\"grid\">PDF: varias plantas por página</option><option value=\"single\">PDF: una planta por página</option></select><button id=\"bPdf\" class=\"pri\">Generar PDF</button><span id=\"msg\" class=\"hint\"></span><input type=\"file\" id=\"file\" accept=\".json\" hidden></header><main><div id=\"wrap\"><canvas id=\"cv\"></canvas></div><aside><h3>Escena</h3><label>Nombre<input id=\"scName\"></label><textarea id=\"scNotes\" rows=\"2\" placeholder=\"Notas de la escena (salen en el PDF)\"></textarea><div class=\"row\"><button id=\"bDs\">Duplicar escena</button><button id=\"bXs\">Eliminar escena</button></div><h3>Plano</h3><label>Nombre<input id=\"plName\"></label><div class=\"row\"><button id=\"bDp\">Duplicar plano</button><button id=\"bXp\">Eliminar plano</button></div><h3>Elemento</h3><div id=\"pp\"></div><h3>Cámaras de este plano</h3><table><thead><tr><th>Cám.</th><th>Lente</th><th>Notas</th></tr></thead><tbody id=\"sl\"></tbody></table></aside></main><div id=\"tlw\"><div id=\"tl\"></div></div><div id=\"agm\" hidden><div class=\"box\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"agt\"><h2 id=\"agt\">Agradecimientos</h2><p>Charlie Martínez - Quirinux GNU/Linux agradece a <b>Gustavo Deveze</b> por las siguientes mejoras que sugirió:</p><ol></ol><div class=\"row\"><button id=\"agx\" class=\"pri\" type=\"button\">Cerrar</button></div></div></div>";
+try{
+var st=document.createElement("style");st.textContent=CSS;(document.head||root).appendChild(st);
+root.innerHTML=HTML;
+(function(){
+const root=document.getElementById('sp-app'),$=s=>root.querySelector(s),cv=$('#cv'),cx=cv.getContext('2d');
+// tamaño del plano en unidades internas (el canvas se escala a la ventana) y lentes disponibles
+const W=1000,H=640,rad=Math.PI/180,LENSES=[14,18,24,28,35,50,65,85,100,135];
+// objetos de la lista: [ancho, alto, 1 si es redondo]
+const PROPS={'Mesa':[90,50],'Mesa redonda':[60,60,1],'Silla':[28,28],'Sofá':[110,45],'Cama':[100,140],'Armario':[80,30],'Puerta':[50,8],'Ventana':[70,6],'Pared':[200,10],'Columna':[24,24,1],'Escalera':[50,110],'Coche':[110,50],'Árbol':[50,50,1],'Alfombra':[120,80],'Patrullero':[110,50],'Ambulancia':[140,56],'Camión':[210,64],'Bicicleta':[70,18],'Moto':[75,22],'Cama 1 plaza':[70,140],'Rectángulo':[100,50],'Círculo':[60,60,1],'Cuadrado':[50,50]};
+// colores que van rotando para los actores nuevos
+const ACT=['#e8590c','#2f9e44','#e0a800','#7048e8','#d6336c'];
+// altura y angulación de cámara; el valor vacío significa 'no indicar'
+const ALT=[['','— sin indicar'],['baja','Baja'],['normal','Normal'],['alta','Alta']],ANG=[['','— sin indicar'],['normal','Normal'],['picada','Picada'],['contrapicada','Contrapicada'],['cenital','Cenital']];
+const ALTN=Object.fromEntries(ALT.filter(a=>a[0])),ANGN=Object.fromEntries(ANG.filter(a=>a[0]));
+const apTxt=(c,sep)=>ALTN[c.alt||'normal']+sep+ANGN[c.ang||'normal'];
+// S es todo el proyecto. sel = elemento elegido, ms = si hay varios, clip = portapapeles propio
+let S=null,sel=null,ms=[],clip=[],clipPl=null,pasteN=0,lastDest=null,nOwner=null,nsel=-1,tool='select',drag=null,k=1,ox=0,oy=0;
+const newPlano=n=>({name:n,items:[]});
+const newScene=n=>({name:n,notes:'',cur:0,planos:[newPlano('Plano 1')]});
+function norm(d){ // acepta formatos anteriores
+ if(d&&d.items)d={scenes:[{name:'Escena 1',notes:'',items:d.items}],cur:0,id:d.id||1,proj:''};
+ if(!d||!Array.isArray(d.scenes)||!d.scenes.length)return null;
+ d.scenes.forEach(s=>{if(!s.planos){s.planos=[{name:'Plano 1',items:s.items||[]}];delete s.items}s.cur=Math.min(s.cur||0,s.planos.length-1);s.notes=s.notes||'';
+  s.planos.forEach(p=>p.items.forEach(i=>{if(!i.path)i.path=[];convCurve(i)}))});
+ d.cur=Math.min(d.cur||0,d.scenes.length-1);d.id=d.id||1000;d.proj=d.proj||'';return d}
+
+if(!S)S={scenes:[newScene('Escena 1')],cur:0,id:1,proj:''};
+// atajos: escena actual, plano actual y sus elementos
+const sc=()=>S.scenes[S.cur],pl=()=>sc().planos[sc().cur],items=()=>pl().items;
+// lo que está seleccionado ahora, uno o varios
+const selAll=()=>ms.length?ms:(sel?[sel]:[]);
+const ord=a=>items().filter(i=>a.includes(i));
+function setSel(a){a=[...new Set(a)];if(a.length>1){ms=ord(a);sel=null}else{ms=[];sel=a[0]||null}}
+// al duplicar un plano: 'Plano 1' pasa a 'Plano 1 (cont)', después '(cont 2)'...
+function contName(n){const m=/^(.*?) \(cont(?: (\d+))?\)$/.exec(n);return m?m[1]+' (cont '+((+m[2]||1)+1)+')':n+' (cont)'}
+// ya no se guarda nada solo: el proyecto se guarda únicamente con el botón Guardar (archivo .json)
+const save=()=>{};
+// historial de deshacer/rehacer: guardo copias del proyecto como texto
+let hist=[],hi=-1,lastTyping=false;
+// foto del proyecto para saber si hay cambios sin guardar
+const stamp=()=>JSON.stringify(S,(k,v)=>k==='cur'?undefined:v); // foto del proyecto sin la escena/plano abierto
+let clean=null,pend=null; // clean = foto en el último Guardar/Abrir; pend = Guardar a la espera de que termine la descarga
+window.qpcSinGuardar=()=>clean!==null&&stamp()!==clean;
+window.qpcGuardado=()=>{if(pend!==null){clean=pend;pend=null}};
+window.qpcGuardadoCancelado=()=>{pend=null};
+addEventListener('beforeunload',e=>{if(window.qpcSinGuardar()){e.preventDefault();e.returnValue='';return ''}});
+const updUndo=()=>{const u=$('#bUndo'),r=$('#bRedo');if(u)u.disabled=hi<=0;if(r)r.disabled=hi>=hist.length-1};
+function snap(co){const j=JSON.stringify(S);if(hist[hi]===j)return;
+ if(co&&lastTyping&&hi===hist.length-1&&hi>0){hist[hi]=j}
+ else{hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>150)hist.shift();hi=hist.length-1}
+ lastTyping=!!co;updUndo()}
+function goHist(d){const n=hi+d;if(n<0||n>=hist.length)return;hi=n;lastTyping=false;const id=sel&&sel.id;
+ S=JSON.parse(hist[hi]);sel=null;ms=[];refresh();sel=items().find(i=>i.id===id)||null;panel();list();draw();save();updUndo()}
+// ángulo horizontal de visión según la lente (sensor de unos 24,9 mm de ancho)
+const hfov=l=>2*Math.atan(24.89/(2*l)),esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+for(const p of Object.keys(PROPS).sort((a,b)=>a.localeCompare(b,'es')))$('#propSel').insertAdjacentHTML('beforeend',`<option>${p}</option>`);
+// tamaño de cada elemento, para el marco de selección y para saber dónde se hizo clic
+function geom(it,g){
+ if(it.type==='cam')return[34,22];if(it.type==='actor')return[28,28];
+ if(it.type==='text'){g.font='16px sans-serif';return[g.measureText(it.label).width+8,20]}
+ return[it.w,it.h]}
+const hpos=(it,g)=>{const[w,h]=geom(it,g),r=Math.max(w,h)/2+8;return{x:it.x+r*Math.cos(it.rot*rad),y:it.y+r*Math.sin(it.rot*rad)}};
+function nodeH(it){ // manijas de cada nodo: automáticas (modo curva) o manuales (nodo con man)
+ const P=[it].concat(it.path||[]),n=P.length;
+ return P.map((p,k)=>{if(!it.cv)return{};
+  if(p.man&&p.ox!=null)return{o:k<n-1?{x:p.x+p.ox,y:p.y+p.oy}:null,i:k>0?{x:p.x+p.ix,y:p.y+p.iy}:null};
+  const a=P[Math.max(0,k-1)],b=P[Math.min(n-1,k+1)],dx=(b.x-a.x)/6,dy=(b.y-a.y)/6;
+  return{o:k<n-1?{x:p.x+dx,y:p.y+dy}:null,i:k>0?{x:p.x-dx,y:p.y-dy}:null}})}
+// la flecha como tramos Bézier; si es recta los controles caen sobre los propios puntos
+function segs(it){const P=[it].concat(it.path||[]),H=nodeH(it),o=[];
+ for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];o.push({i,p0:{x:a.x,y:a.y},p1:{x:b.x,y:b.y},c1:H[i].o||{x:a.x,y:a.y},c2:H[i+1].i||{x:b.x,y:b.y}})}
+ return o}
+// quita las manijas manuales de un nodo
+function setCorner(p){delete p.ox;delete p.oy;delete p.ix;delete p.iy;delete p.man;delete p.s}
+// proyectos guardados con versiones anteriores: los paso al formato nuevo de flechas
+function convCurve(i){const P=[i].concat(i.path||[]);let any=!!i.curve;
+ P.forEach(p=>{if(p.ox!=null||p.ix!=null){any=true;if(p.ox==null){p.ox=-p.ix;p.oy=-p.iy}if(p.ix==null){p.ix=-p.ox;p.iy=-p.oy}p.man=true;delete p.s}});
+ delete i.curve;if(any)i.cv=true}
+// con un solo tramo no hay nada que doblar, así que meto un nodo en el medio, algo desplazado
+function bendMid(it){const p=it.path[0],dx=p.x-it.x,dy=p.y-it.y;it.path.unshift({x:it.x+dx/2-dy*.2,y:it.y+dy/2+dx*.2});nOwner=it;nsel=0}
+// punto de la flecha más cercano al ratón (miro 24 puntos por tramo)
+function nearSeg(it,m){let best=null;segs(it).forEach(s=>{let q=s.p0;for(let j=1;j<=24;j++){const t=j/24,u=1-t,r={x:u*u*u*s.p0.x+3*u*u*t*s.c1.x+3*u*t*t*s.c2.x+t*t*t*s.p1.x,y:u*u*u*s.p0.y+3*u*u*t*s.c1.y+3*u*t*t*s.c2.y+t*t*t*s.p1.y};
+  const dx=r.x-q.x,dy=r.y-q.y,L2=dx*dx+dy*dy||1,f=Math.max(0,Math.min(1,((m.x-q.x)*dx+(m.y-q.y)*dy)/L2)),d=Math.hypot(m.x-(q.x+f*dx),m.y-(q.y+f*dy));
+  if(!best||d<best.d)best={d,i:s.i,t:(j-1+f)/24};q=r}});return best}
+// parte un tramo en dos, creando un nodo en el punto t
+function splitSeg(it,i,t){const s=segs(it)[i],L=(a,b)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t}),p01=L(s.p0,s.c1),p12=L(s.c1,s.c2),p23=L(s.c2,s.p1),m=L(L(p01,p12),L(p12,p23));
+ it.path.splice(i,0,{x:m.x,y:m.y});nOwner=it;nsel=i}
+function camPic(g,x,y,alt,ang,col){ // pictograma lateral: mástil + flecha de altura y angulación
+ g.save();g.translate(x,y);g.lineCap='round';g.lineJoin='round';
+ rr(g,-19,-21,38,42,6);g.fillStyle='rgba(255,255,255,.92)';g.fill();g.strokeStyle='#9aa0ad';g.lineWidth=1;g.stroke();
+ g.strokeStyle='#1f2430';g.lineWidth=2;g.beginPath();g.moveTo(-11,-16);g.lineTo(-11,16);g.moveTo(-15,-16);g.lineTo(-7,-16);g.moveTo(-15,16);g.lineTo(-7,16);g.stroke();
+ const y0={baja:9,normal:0,alta:-9}[alt]||0,a=({normal:0,picada:38,contrapicada:-38,cenital:75}[ang]||0)*rad,x0=-11;
+ let L=22,y1=y0+L*Math.sin(a);if(y1>16){L=Math.max(8,(16-y0)/Math.sin(a))}else if(y1<-16){L=Math.max(8,(-16-y0)/Math.sin(a))}
+ const x1=x0+L*Math.cos(a);y1=y0+L*Math.sin(a);
+ g.strokeStyle=col;g.fillStyle=col;g.lineWidth=2.6;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();
+ g.beginPath();g.moveTo(x1+3*Math.cos(a),y1+3*Math.sin(a));g.lineTo(x1-8*Math.cos(a-.5),y1-8*Math.sin(a-.5));g.lineTo(x1-8*Math.cos(a+.5),y1-8*Math.sin(a+.5));g.closePath();g.fill();
+ g.restore()}
+// rectángulo con esquinas redondeadas
+function rr(g,x,y,w,h,r){r=Math.min(r,w/2,h/2);g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+const fillA=(g,a)=>{g.globalAlpha=a;g.fill();g.globalAlpha=1};
+const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`};
+// texto con borde blanco para que se lea sobre cualquier fondo
+function halo(g,t,x,y,font,col){g.font=font;g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.lineWidth=4;g.strokeStyle='rgba(255,255,255,.92)';g.strokeText(t,x,y);g.fillStyle=col;g.fillText(t,x,y)}
+// objetos que no muestran su nombre en el plano mientras no lo cambie
+const QUIET=['Pared','Puerta','Ventana','Columna','Alfombra','Rectángulo','Círculo','Cuadrado'];
+function wheels(g,xs,h,len){xs.forEach(wx=>[-1,1].forEach(b=>{rr(g,wx-len/2,b*h/2-3,len,6,2);fillA(g,.9);g.stroke()}))}
+function car(g,w,h){const x=-w/2,y=-h/2;rr(g,x,y,w,h,14);fillA(g,.15);g.stroke();
+ g.beginPath();g.moveTo(w*.12,-h*.38);g.lineTo(w*.3,-h*.3);g.lineTo(w*.3,h*.3);g.lineTo(w*.12,h*.38);g.closePath();fillA(g,.4);g.stroke();
+ rr(g,-w*.3,-h*.34,w*.34,h*.68,4);g.globalAlpha=.6;g.stroke();g.globalAlpha=1;wheels(g,[-w*.32,w*.3],h,18)}
+// dibujo de cada objeto visto desde arriba
+function drawProp(g,it){
+ const w=it.w,h=it.h,x=-w/2,y=-h/2,kd=it.kind||it.label;
+ g.lineWidth=1.5;g.lineJoin='round';
+ const box=(f,r)=>{rr(g,x,y,w,h,r||3);fillA(g,f);g.stroke()};
+ const ell=(rx,ry,f)=>{g.beginPath();g.ellipse(0,0,rx,ry,0,0,7);if(f)fillA(g,f);g.stroke()};
+ switch(kd){
+ case 'Mesa':box(.18,4);rr(g,x+5,y+5,w-10,h-10,2);g.globalAlpha=.45;g.stroke();g.globalAlpha=1;break;
+ case 'Mesa redonda':ell(w/2,h/2,.18);g.globalAlpha=.45;ell(w/2-5,h/2-5,0);g.globalAlpha=1;break;
+ case 'Silla':rr(g,x+6,y,w-6,h,4);fillA(g,.2);g.stroke();rr(g,x,y,7,h,3);fillA(g,.75);g.stroke();break;
+ case 'Sofá':box(.12,6);rr(g,x,y,w,h*.3,5);fillA(g,.5);g.stroke();rr(g,x,y,w*.1,h,5);fillA(g,.5);g.stroke();rr(g,x+w*.9,y,w*.1,h,5);fillA(g,.5);g.stroke();
+  g.beginPath();[1,2].forEach(i=>{const px=x+w*.1+w*.8*i/3;g.moveTo(px,y+h*.3);g.lineTo(px,y+h)});g.globalAlpha=.6;g.stroke();g.globalAlpha=1;break;
+ case 'Cama':{box(.1,4);const pw=(w-18)/2;[x+6,x+12+pw].forEach(px=>{rr(g,px,y+6,pw,h*.18,5);fillA(g,.35);g.stroke()});
+  g.beginPath();g.moveTo(x,y+h*.42);g.lineTo(x+w,y+h*.42);g.stroke();break}
+ case 'Armario':box(.2,2);g.beginPath();g.moveTo(0,y);g.lineTo(0,y+h);g.moveTo(x,y);g.lineTo(x+w,y+h);g.moveTo(x+w,y);g.lineTo(x,y+h);g.globalAlpha=.35;g.stroke();g.globalAlpha=1;break;
+ case 'Puerta':g.beginPath();g.rect(x,y,w,h);g.fillStyle='#fff';g.fill();g.stroke();
+  g.setLineDash([4,3]);g.beginPath();g.arc(x,0,w,-Math.PI/2,0);g.globalAlpha=.7;g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.beginPath();g.moveTo(x,0);g.lineTo(x,-w);g.lineWidth=2.5;g.stroke();break;
+ case 'Ventana':g.beginPath();g.rect(x,y,w,h);g.fillStyle='#fff';g.fill();g.stroke();g.beginPath();g.moveTo(x,0);g.lineTo(x+w,0);g.stroke();break;
+ case 'Pared':rr(g,x,y,w,h,1);fillA(g,.9);g.stroke();break;
+ case 'Columna':ell(w/2,h/2,.55);break;
+ case 'Escalera':box(.08,2);g.beginPath();for(let s=y+10;s<y+h;s+=10){g.moveTo(x,s);g.lineTo(x+w,s)}g.globalAlpha=.6;g.stroke();g.globalAlpha=1;
+  g.beginPath();g.moveTo(0,y+h-6);g.lineTo(0,y+6);g.moveTo(-6,y+14);g.lineTo(0,y+6);g.lineTo(6,y+14);g.stroke();break;
+ case 'Coche':rr(g,x,y,w,h,14);fillA(g,.15);g.stroke();
+  g.beginPath();g.moveTo(w*.12,-h*.38);g.lineTo(w*.3,-h*.3);g.lineTo(w*.3,h*.3);g.lineTo(w*.12,h*.38);g.closePath();fillA(g,.4);g.stroke();
+  rr(g,-w*.3,-h*.34,w*.34,h*.68,4);g.globalAlpha=.6;g.stroke();g.globalAlpha=1;
+  [[-.32,-1],[-.32,1],[.3,-1],[.3,1]].forEach(([a,b])=>{rr(g,w*a-9,b*h/2-3,18,6,2);fillA(g,.9);g.stroke()});break;
+ case 'Árbol':for(let i=0;i<8;i++){const a=i*Math.PI/4;g.beginPath();g.arc(Math.cos(a)*w*.25,Math.sin(a)*h*.25,w*.25,0,7);fillA(g,.12);g.stroke()}
+  g.beginPath();g.arc(0,0,3,0,7);g.fill();break;
+ case 'Alfombra':box(.1,3);g.setLineDash([5,4]);rr(g,x+6,y+6,w-12,h-12,2);g.stroke();g.setLineDash([]);break;
+ case 'Patrullero':{const c0=g.fillStyle;car(g,w,h);
+  rr(g,-6,-h*.3,12,h*.3,2);g.fillStyle='#d9232d';g.fill();g.stroke();rr(g,-6,0,12,h*.3,2);g.fillStyle='#1f6feb';g.fill();g.stroke();g.fillStyle=c0;break}
+ case 'Ambulancia':{const c0=g.fillStyle;rr(g,x,y,w,h,8);fillA(g,.15);g.stroke();
+  g.beginPath();g.moveTo(w*.12,y);g.lineTo(w*.12,y+h);g.stroke();
+  g.beginPath();g.moveTo(w*.3,-h*.36);g.lineTo(w*.42,-h*.28);g.lineTo(w*.42,h*.28);g.lineTo(w*.3,h*.36);g.closePath();fillA(g,.4);g.stroke();
+  g.fillStyle='#d9232d';g.fillRect(-w*.2-3,-h*.26,6,h*.52);g.fillRect(-w*.2-h*.26,-3,h*.52,6);
+  rr(g,w*.14,-h*.12,6,h*.12,1);g.fillStyle='#d9232d';g.fill();rr(g,w*.14,0,6,h*.12,1);g.fillStyle='#1f6feb';g.fill();g.fillStyle=c0;
+  wheels(g,[-w*.32,w*.3],h,18);break}
+ case 'Camión':rr(g,x,y,w*.7,h,3);fillA(g,.1);g.stroke();
+  rr(g,w*.22,y+4,w*.28,h-8,6);fillA(g,.3);g.stroke();
+  g.beginPath();g.moveTo(w*.4,-h*.3);g.lineTo(w*.46,-h*.24);g.lineTo(w*.46,h*.24);g.lineTo(w*.4,h*.3);g.closePath();fillA(g,.5);g.stroke();
+  wheels(g,[-w*.36,-w*.22,w*.32],h,18);break;
+ case 'Bicicleta':rr(g,x,-2,20,4,2);fillA(g,.9);g.stroke();rr(g,x+w-20,-2,20,4,2);fillA(g,.9);g.stroke();
+  g.beginPath();g.moveTo(x+14,0);g.lineTo(x+w-12,0);g.moveTo(x+w-18,y);g.lineTo(x+w-18,y+h);g.stroke();
+  rr(g,-8,-3,10,6,3);fillA(g,.8);g.stroke();break;
+ case 'Moto':rr(g,x,-3,22,6,2);fillA(g,.9);g.stroke();rr(g,x+w-22,-3,22,6,2);fillA(g,.9);g.stroke();
+  rr(g,-18,-6,34,12,5);fillA(g,.35);g.stroke();rr(g,-4,-4.5,18,9,4);fillA(g,.55);g.stroke();
+  g.beginPath();g.moveTo(x+w-24,y);g.lineTo(x+w-24,y+h);g.stroke();break;
+ case 'Cama 1 plaza':box(.1,4);rr(g,x+6,y+6,w-12,h*.16,5);fillA(g,.35);g.stroke();
+  g.beginPath();g.moveTo(x,y+h*.42);g.lineTo(x+w,y+h*.42);g.stroke();break;
+ case 'Rectángulo':case 'Cuadrado':box(.15,2);break;
+ case 'Círculo':ell(w/2,h/2,.15);break;
+ default:box(.2,3)}
+}
+// dibuja un plano entero. Lo uso para la pantalla, las miniaturas y el PDF
+function render(g,list,selIt,multi,box){
+ g.fillStyle='#fff';g.fillRect(0,0,W,H);g.lineWidth=1;
+ g.strokeStyle='#f1f2f5';g.beginPath();for(let x=0;x<=W;x+=20){g.moveTo(x,0);g.lineTo(x,H)}for(let y=0;y<=H;y+=20){g.moveTo(0,y);g.lineTo(W,y)}g.stroke();
+ g.strokeStyle='#dde0e7';g.beginPath();for(let x=0;x<=W;x+=100){g.moveTo(x,0);g.lineTo(x,H)}for(let y=0;y<=H;y+=100){g.moveTo(0,y);g.lineTo(W,y)}g.stroke();
+ const ord=[...list].sort((a,b)=>(a.type==='prop'?0:1)-(b.type==='prop'?0:1));
+ for(const it of ord){
+  const r=it.rot*rad;
+  if(it.type==='cam'){ // cono de visión
+   const f=hfov(it.lens),L=190,gr=g.createLinearGradient(it.x,it.y,it.x+Math.cos(r)*L,it.y+Math.sin(r)*L);
+   gr.addColorStop(0,hexA(it.color,.34));gr.addColorStop(1,hexA(it.color,.03));
+   g.beginPath();g.moveTo(it.x,it.y);g.arc(it.x,it.y,L,r-f/2,r+f/2);g.closePath();g.fillStyle=gr;g.fill();
+   g.strokeStyle=hexA(it.color,.85);g.lineWidth=1.3;g.setLineDash([7,4]);g.beginPath();
+   g.moveTo(it.x+Math.cos(r-f/2)*L,it.y+Math.sin(r-f/2)*L);g.lineTo(it.x,it.y);g.lineTo(it.x+Math.cos(r+f/2)*L,it.y+Math.sin(r+f/2)*L);g.stroke();
+   g.setLineDash([1,5]);g.lineCap='round';g.beginPath();g.arc(it.x,it.y,L,r-f/2,r+f/2);g.stroke();g.setLineDash([]);g.lineCap='butt'}
+ }
+ for(const it of ord){
+  const r=it.rot*rad;
+  if(it.path&&it.path.length){ // flecha de movimiento
+   g.lineCap='round';g.lineJoin='round';g.setLineDash([8,6]);g.strokeStyle=it.color;g.fillStyle=it.color;g.lineWidth=2.5;g.beginPath();g.moveTo(it.x,it.y);
+   segs(it).forEach(s=>g.bezierCurveTo(s.c1.x,s.c1.y,s.c2.x,s.c2.y,s.p1.x,s.p1.y));g.stroke();g.setLineDash([]);
+   const sg=segs(it),ls=sg[sg.length-1],b=ls.p1,a=(ls.c2.x!==b.x||ls.c2.y!==b.y)?ls.c2:ls.p0,q=Math.atan2(b.y-a.y,b.x-a.x);
+   g.beginPath();g.moveTo(b.x+4*Math.cos(q),b.y+4*Math.sin(q));g.lineTo(b.x-12*Math.cos(q-.45),b.y-12*Math.sin(q-.45));g.lineTo(b.x-12*Math.cos(q+.45),b.y-12*Math.sin(q+.45));g.closePath();g.fill();
+   if(it===selIt){const H=nodeH(it);g.lineWidth=1.2;
+    if(it.cv&&nOwner===it&&nsel>=0&&nsel<it.path.length){const p=it.path[nsel],h=H[nsel+1];[h.o,h.i].forEach(q=>{if(q){g.strokeStyle='#684870';g.beginPath();g.moveTo(p.x,p.y);g.lineTo(q.x,q.y);g.stroke();g.beginPath();g.arc(q.x,q.y,4.5,0,7);g.fillStyle='#684870';g.fill()}})}
+    it.path.forEach((p,i)=>{const on=nOwner===it&&nsel===i;g.beginPath();g.arc(p.x,p.y,7,0,7);
+     if(i<it.path.length-1){g.fillStyle=on?'#684870':'#fff';g.fill()}g.strokeStyle=it.color;g.lineWidth=on?3:2.5;g.stroke()})}
+   g.lineCap='butt'}
+  g.save();g.translate(it.x,it.y);g.rotate(it.rot*rad);g.fillStyle=it.color;g.strokeStyle=it.color;
+  if(it.type==='cam'){
+   g.lineJoin='round';rr(g,-17,-10,25,20,3);g.fill();g.strokeStyle='#fff';g.lineWidth=1.5;g.stroke();
+   rr(g,-22,-5,6,10,2);g.fillStyle=it.color;g.fill();
+   g.fillStyle='#1f2430';g.beginPath();g.moveTo(8,-6);g.lineTo(19,-10);g.lineTo(19,10);g.lineTo(8,6);g.closePath();g.fill();g.strokeStyle='#fff';g.stroke();
+   g.fillStyle='#fff';g.globalAlpha=.8;g.beginPath();g.arc(-5,-4,3.2,0,7);g.arc(-5,4,3.2,0,7);g.fill();g.globalAlpha=1}
+  else if(it.type==='actor'){ // persona vista desde arriba
+   g.lineJoin='round';g.beginPath();g.ellipse(0,0,7,15,0,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=1.8;g.stroke();
+   g.beginPath();g.arc(1,0,6.5,0,7);g.fillStyle='#fff';g.globalAlpha=.55;g.fill();g.globalAlpha=1;g.fillStyle=it.color;g.fill();g.strokeStyle='#fff';g.stroke();
+   g.beginPath();g.moveTo(7.5,-3);g.lineTo(11.5,0);g.lineTo(7.5,3);g.closePath();g.fillStyle='#1f2430';g.fill()}
+  else if(it.type==='prop')drawProp(g,it);
+  else halo(g,it.label,0,0,'600 16px system-ui,sans-serif',it.color);
+  g.restore();
+  if(it.type==='cam'){halo(g,it.lens+'mm · '+(hfov(it.lens)/rad).toFixed(0)+'°',it.x+Math.cos(r)*112,it.y+Math.sin(r)*112,'11px system-ui,sans-serif','#374151');
+   halo(g,it.label+(it.pnl?' · PNL '+it.pnl:''),it.x,it.y+26,'600 12px system-ui,sans-serif','#1f2430');
+   if(it.alt||it.ang)camPic(g,it.x-Math.cos(r)*52,it.y-Math.sin(r)*52,it.alt||'normal',it.ang||'normal',it.color)}
+  else if(it.type==='actor')halo(g,it.label,it.x,it.y+27,'600 12px system-ui,sans-serif','#1f2430');
+  else if(it.type==='prop'&&!(QUIET.includes(it.kind||it.label)&&it.label===(it.kind||it.label))){
+   const bh=(Math.abs(Math.sin(r))*it.w+Math.abs(Math.cos(r))*it.h)/2;halo(g,it.label,it.x,it.y+bh+11,'11px system-ui,sans-serif','#4b5563')}
+ }
+ if(multi&&multi.length)multi.forEach(it=>{const[w,h]=geom(it,g);g.save();g.translate(it.x,it.y);g.rotate(it.rot*rad);g.strokeStyle='#684870';g.lineWidth=1.5;g.setLineDash([5,4]);rr(g,-w/2-5,-h/2-5,w+10,h+10,6);g.stroke();g.restore();g.setLineDash([])});
+ if(box){g.save();g.setLineDash([4,3]);g.lineWidth=1;g.strokeStyle='#684870';g.fillStyle='rgba(104,72,112,.12)';const bx=Math.min(box.x0,box.x1),by=Math.min(box.y0,box.y1),bw=Math.abs(box.x1-box.x0),bh=Math.abs(box.y1-box.y0);g.fillRect(bx,by,bw,bh);g.strokeRect(bx,by,bw,bh);g.restore()}
+ if(selIt){const[w,h]=geom(selIt,g),hp=hpos(selIt,g);
+  g.save();g.translate(selIt.x,selIt.y);g.rotate(selIt.rot*rad);g.strokeStyle='#684870';g.lineWidth=1.5;g.setLineDash([5,4]);rr(g,-w/2-5,-h/2-5,w+10,h+10,6);g.stroke();g.restore();g.setLineDash([]);
+  g.strokeStyle='#684870';g.lineWidth=1;g.beginPath();g.moveTo(selIt.x,selIt.y);g.lineTo(hp.x,hp.y);g.stroke();
+  g.beginPath();g.arc(hp.x,hp.y,6.5,0,7);g.fillStyle='#fff';g.fill();g.lineWidth=2.5;g.stroke()}
+}
+// ajusta el canvas al tamaño de la ventana
+function size(){cv.width=cv.clientWidth;cv.height=cv.clientHeight;k=Math.min(cv.width/W,cv.height/H)*.98;ox=(cv.width-W*k)/2;oy=(cv.height-H*k)/2;draw()}
+function draw(){cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#6b6c6f';cx.fillRect(0,0,cv.width,cv.height);
+ cx.setTransform(k,0,0,k,ox,oy);cx.save();cx.beginPath();cx.rect(0,0,W,H);cx.clip();render(cx,items(),sel,ms,drag&&drag.k==='box'?drag:null);cx.restore();
+ cx.strokeStyle='#041738';cx.lineWidth=1/k;cx.strokeRect(0,0,W,H)}
+addEventListener('resize',size);
+// posición del ratón en coordenadas del plano
+const mp=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left-ox)/k,y:(e.clientY-r.top-oy)/k}};
+// elemento que hay bajo el ratón (el de más arriba)
+function hit(m){const L=items();for(let i=L.length-1;i>=0;i--){const it=L[i],[w,h]=geom(it,cx);
+ const dx=m.x-it.x,dy=m.y-it.y,c=Math.cos(-it.rot*rad),s=Math.sin(-it.rot*rad),lx=dx*c-dy*s,ly=dx*s+dy*c;
+ if(Math.abs(lx)<=w/2+3&&Math.abs(ly)<=h/2+3)return it}return null}
+// crea un elemento nuevo donde se hizo clic
+function addItem(spec,m){
+ const[kind,a]=spec.split('|'),L=items(),cams=L.filter(i=>i.type==='cam').length,ac=L.filter(i=>i.type==='actor').length;
+ const it={id:S.id++,type:kind,x:m.x,y:m.y,rot:0,path:[]};
+ if(kind==='cam')Object.assign(it,{label:'Cámara '+String.fromCharCode(65+cams%26),lens:35,color:'#1f6feb',note:''});
+ if(kind==='actor')Object.assign(it,{label:'Actor '+(ac+1),color:ACT[ac%5]});
+ if(kind==='prop'){const p=PROPS[a];Object.assign(it,{label:a,kind:a,w:p[0],h:p[1],round:!!p[2],color:'#6b7280'})}
+ if(kind==='text')Object.assign(it,{label:'Texto',color:'#1f2430'});
+ L.push(it);sel=it;ms=[];change();panel();
+ if(kind==='text')setTimeout(()=>{const f=$('#f_label');if(f){f.focus();f.select()}},0)}
+function setTool(x){tool=x;root.querySelectorAll('#tb [data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===x));cv.style.cursor=x==='select'?'default':'crosshair';const mg=$('#msg');if(mg){if(x==='path')mg.textContent='Flecha: clic para marcar puntos · Esc o doble clic para terminar';else if(mg.textContent.startsWith('Flecha:'))mg.textContent=''}}
+$('#tb').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool)});
+$('#propSel').onchange=e=>{if(e.target.value)setTool('add:prop|'+e.target.value);e.target.value=''};
+// selecciona un elemento; si es de un grupo entra todo el grupo. Con Mayús suma o resta
+function pickItem(it,add){let cur=selAll();const grp=it.g?items().filter(i=>i.g===it.g):[it];
+ if(add)cur=grp.every(i=>cur.includes(i))?cur.filter(i=>!grp.includes(i)):cur.concat(grp.filter(i=>!cur.includes(i)));else cur=grp;
+ setSel(cur)}
+cv.onpointerdown=e=>{cv.focus({preventScroll:true});const m=mp(e);cv.setPointerCapture(e.pointerId);
+ if(tool.startsWith('add:')){addItem(tool.slice(4),m);setTool('select');return}
+ if(tool==='path'&&!(sel&&sel.path.some(p=>Math.hypot(p.x-m.x,p.y-m.y)<9))){const h=hit(m);if(h&&h!==sel){sel=h;ms=[];panel();draw();return}
+  if(sel){sel.path.push({x:m.x,y:m.y});change();panel()}return}
+ if(sel){const hp=hpos(sel,cx);if(Math.hypot(m.x-hp.x,m.y-hp.y)<10/k+4){drag={k:'rot'};return}
+  if(sel.cv&&nOwner===sel&&nsel>=0&&nsel<sel.path.length){const hh=nodeH(sel)[nsel+1];for(const w of ['o','i'])if(hh[w]&&Math.hypot(hh[w].x-m.x,hh[w].y-m.y)<9){drag={k:'h',w};return}}
+  const i=sel.path.findIndex(p=>Math.hypot(p.x-m.x,p.y-m.y)<9);if(i>=0){nOwner=sel;nsel=i;drag={k:'wp',i};panel();draw();return}}
+ nsel=-1;
+ const h=hit(m),add=e.shiftKey||e.ctrlKey||e.metaKey;
+ if(h){
+  if(add)pickItem(h,true);else if(!selAll().includes(h))pickItem(h,false);
+  panel();list();const t=selAll();
+  if(t.includes(h))drag=t.length>1?{k:'mvm',x0:m.x,y0:m.y,h,add,orig:t.map(i=>({i,x:i.x,y:i.y,path:i.path.map(p=>Object.assign({},p))}))}:{k:'mv',dx:h.x-m.x,dy:h.y-m.y};
+  draw();return}
+ if(sel&&sel.path.length){const nb=nearSeg(sel,m);if(nb&&nb.d<9){drag={k:'ln',i:nb.i,t:nb.t,x0:m.x,y0:m.y};return}}
+ if(!add)setSel([]);
+ drag={k:'box',x0:m.x,y0:m.y,x1:m.x,y1:m.y,add};panel();list();draw()};
+cv.onpointermove=e=>{if(!drag)return;const m=mp(e);
+ if(drag.k==='box'){drag.x1=m.x;drag.y1=m.y;draw();return}
+ if(drag.k==='mvm'){const dx=m.x-drag.x0,dy=m.y-drag.y0;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=1;
+  if(drag.moved)drag.orig.forEach(o=>{o.i.x=o.x+dx;o.i.y=o.y+dy;o.i.path=o.path.map(p=>Object.assign({},p,{x:p.x+dx,y:p.y+dy}))});draw();return}
+ if(!sel)return;
+ if(drag.k==='ln'){if(Math.hypot(m.x-drag.x0,m.y-drag.y0)<4)return;splitSeg(sel,drag.i,drag.t);drag={k:'wp',i:drag.i}}
+ if(drag.k==='h'){const p=sel.path[nsel],hh=nodeH(sel)[nsel+1];
+  if(!p.man){p.ox=hh.o?hh.o.x-p.x:p.x-hh.i.x;p.oy=hh.o?hh.o.y-p.y:p.y-hh.i.y;p.ix=-p.ox;p.iy=-p.oy;p.man=true}
+  const a=drag.w==='o'?1:-1;p.ox=(m.x-p.x)*a;p.oy=(m.y-p.y)*a;p.ix=-p.ox;p.iy=-p.oy;draw();return}
+ if(drag.k==='mv'){sel.x=m.x+drag.dx;sel.y=m.y+drag.dy}
+ else if(drag.k==='rot')sel.rot=Math.round(Math.atan2(m.y-sel.y,m.x-sel.x)/rad);
+ else{const p=sel.path[drag.i];p.x=m.x;p.y=m.y}
+ draw()};
+cv.onpointerup=()=>{if(!drag)return;const d=drag;drag=null;
+ if(d.k==='box'){const x0=Math.min(d.x0,d.x1),x1=Math.max(d.x0,d.x1),y0=Math.min(d.y0,d.y1),y1=Math.max(d.y0,d.y1);
+  if(x1-x0>3||y1-y0>3){const f=items().filter(i=>{const[w,h]=geom(i,cx),c=Math.abs(Math.cos(i.rot*rad)),s=Math.abs(Math.sin(i.rot*rad)),bw=(w*c+h*s)/2,bh=(w*s+h*c)/2;
+    return i.x+bw>=x0&&i.x-bw<=x1&&i.y+bh>=y0&&i.y-bh<=y1}),gs=new Set(f.filter(i=>i.g).map(i=>i.g)),all=items().filter(i=>f.includes(i)||(i.g&&gs.has(i.g)));
+   setSel(d.add?selAll().concat(all):all)}
+  panel();list();draw();return}
+ if(d.k==='mvm'&&!d.moved){if(!d.add)pickItem(d.h,false);panel();list();draw();return}
+ change();panel()};
+cv.ondblclick=e=>{const m=mp(e);if(tool==='path'){setTool('select');return}
+if(sel&&sel.path.length){const i=sel.path.findIndex(p=>Math.hypot(p.x-m.x,p.y-m.y)<9);
+ if(i>=0){const p=sel.path[i];if(p.man){setCorner(p);nOwner=sel;nsel=i;change();panel()}return}}
+ setTool('select')};
+root.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key==='Escape'||e.key==='Enter')setTool('select');
+ if((e.key==='Delete'||e.key==='Backspace')&&sel&&nOwner===sel&&nsel>=0&&nsel<sel.path.length){sel.path.splice(nsel,1);nsel=-1;change();panel()}else if((e.key==='Delete'||e.key==='Backspace')&&selAll().length)del()});
+// borra lo seleccionado
+function del(){const s=selAll();pl().items=items().filter(i=>!s.includes(i));sel=null;ms=[];change();panel()}
+// duplica elementos con un desplazamiento; los grupos se copian como grupos nuevos
+function cloneItems(arr,off){const gm={},L=items(),out=arr.map(c=>{const n=JSON.parse(JSON.stringify(c));n.id=S.id++;n.x+=off;n.y+=off;n.path=(n.path||[]).map(p=>Object.assign(p,{x:p.x+off,y:p.y+off}));
+  if(n.g){gm[n.g]=gm[n.g]||S.id++;n.g=gm[n.g]}return n});
+ L.push(...out);setSel(out);change();panel();return out}
+// Ctrl+C
+function copySel(){const a=selAll();if(!a.length)return;clip=ord(a).map(i=>JSON.parse(JSON.stringify(i)));clipPl=pl();pasteN=0;lastDest=null;panel();
+ msg(a.length+(a.length>1?' elementos copiados':' elemento copiado')+'. Ctrl+V pega (también en otro plano o escena).')}
+// Ctrl+V. Si pego varias veces en el mismo plano los voy corriendo para que no se tapen
+function paste(){if(!clip.length)return;const d=pl();let n;if(d===clipPl||d===lastDest)n=++pasteN;else{pasteN=0;n=0}lastDest=d;cloneItems(clip,30*n)}
+// agrupa lo seleccionado o, si ya había grupo, lo desagrupa
+function groupSel(){const a=selAll();if(a.some(i=>i.g))a.forEach(i=>{delete i.g});else{const g=S.id++;a.forEach(i=>{i.g=g})}change();panel()}
+// llamar después de cada modificación: guarda, anota para deshacer y redibuja
+function change(noList,co){save();snap(co);draw();timeline();if(!noList)list()}
+const HINT='Elige una herramienta y haz clic en el plano. Arrastra para mover; el círculo morado rota. «Flecha de movimiento»: elige un elemento y marca puntos (Esc termina). Los puntos de una flecha son nodos: arrástralos o arrastra la línea para doblarla (botones Recta / Curva en el panel). Supr borra el nodo seleccionado. Mayús+clic o arrastrar sobre el fondo selecciona varios elementos; Ctrl+C / Ctrl+V los copian, también a otro plano o escena. Supr borra.';
+const pasteBtn=()=>clip.length?`<button id="m_paste">Pegar (${clip.length})</button>`:'';
+// parte del panel con los botones Recta / Curva y las opciones del nodo elegido
+function arrowUI(){if(!sel.path.length)return'';const nv=nOwner===sel&&nsel>=0&&nsel<sel.path.length;
+ return `<div class="row" style="align-items:center"><b>Flecha</b><button id="a_rect" class="${sel.cv?'':'on'}">Recta</button><button id="a_curv" class="${sel.cv?'on':''}">Curva</button></div><div class="hint">Arrastra un círculo para mover un nodo. Arrastra la línea para crear un nodo nuevo y doblarla.${nv?'':' Clic en un nodo para seleccionarlo.'}</div>${nv?'<div class="row"><b>Nodo '+(nsel+1)+'</b><button id="n_del">Borrar nodo</button>'+(sel.cv&&sel.path[nsel].man?'<button id="n_auto">Curva automática</button>':'')+'</div>'+(sel.cv?'<div class="hint">Los puntos morados son manijas: arrástralos para curvar solo ese nodo.</div>':''):''}`}
+// panel de la derecha con las propiedades del elemento
+function panel(){
+ const p=$('#pp'),pb=()=>{const b=$('#m_paste');if(b)b.onclick=paste};
+ if(ms.length>1){const gr=ms.some(i=>i.g);
+  p.innerHTML=`<div class="hint">${ms.length} elementos seleccionados${gr?' (agrupados)':''}. Arrástralos para moverlos juntos.</div><div class="row"><button id="m_grp">${gr?'Desagrupar':'Agrupar'}</button><button id="m_dup">Duplicar</button><button id="m_copy">Copiar</button>${pasteBtn()}<button id="m_del">Eliminar</button></div>`;
+  $('#m_grp').onclick=groupSel;$('#m_dup').onclick=()=>cloneItems(ms.slice(),30);$('#m_copy').onclick=copySel;$('#m_del').onclick=del;pb();return}
+ if(!sel){p.innerHTML='<span class="hint">'+HINT+'</span>'+(clip.length?'<div class="row">'+pasteBtn()+'</div>':'');pb();return}
+ let h=`<label>Nombre<input id="f_label" value="${esc(sel.label)}"></label>
+ <label>Color<input type="color" id="f_color" value="${sel.color}"></label>${arrowUI()}
+ <label>Rotación °<input type="number" id="f_rot" value="${Math.round(sel.rot)}"></label>`;
+ if(sel.type==='cam')h+=`<label>Lente (mm)<select id="f_lens">${LENSES.map(l=>`<option ${l==sel.lens?'selected':''}>${l}</option>`).join('')}</select></label>
+ <label>Paneles (PNL)<input type="number" id="f_pnl" min="0" value="${sel.pnl||''}" placeholder="—"></label>
+ <label>Altura<select id="f_alt">${ALT.map(a=>`<option value="${a[0]}" ${a[0]===(sel.alt||'')?'selected':''}>${a[1]}</option>`).join('')}</select></label>
+ <label>Ángulo<select id="f_ang">${ANG.map(a=>`<option value="${a[0]}" ${a[0]===(sel.ang||'')?'selected':''}>${a[1]}</option>`).join('')}</select></label>`;
+ if(sel.type==='prop')h+=`<label>Ancho<input type="number" id="f_w" value="${sel.w}"></label><label>Alto<input type="number" id="f_h" value="${sel.h}"></label>`;
+ h+=`<div class="row"><button id="f_dup">Duplicar</button><button id="f_copy">Copiar</button>${pasteBtn()}<button id="f_cp">Quitar flecha</button><button id="f_del">Eliminar</button></div>`;
+ p.innerHTML=h;
+ const bind=(id,fn,nl)=>{const el=$('#'+id);if(el)el.oninput=()=>{fn(el.value);change(nl,true)}};
+ bind('f_label',v=>sel.label=v,0);bind('f_color',v=>sel.color=v);bind('f_rot',v=>sel.rot=+v||0);
+ bind('f_lens',v=>sel.lens=+v);bind('f_pnl',v=>{const n=Math.max(0,parseInt(v)||0);if(n)sel.pnl=n;else delete sel.pnl});bind('f_alt',v=>sel.alt=v);bind('f_ang',v=>sel.ang=v);bind('f_w',v=>sel.w=+v||10);bind('f_h',v=>sel.h=+v||10);
+ if(sel.path.length){$('#a_rect').onclick=()=>{setTool('select');sel.cv=false;change();panel()};$('#a_curv').onclick=()=>{setTool('select');sel.cv=true;if(sel.path.length===1)bendMid(sel);change();panel()};
+  const nd=$('#n_del');if(nd){nd.onclick=()=>{sel.path.splice(nsel,1);nsel=-1;change();panel()};const na=$('#n_auto');if(na)na.onclick=()=>{setCorner(sel.path[nsel]);change();panel()}}}
+ $('#f_del').onclick=del;$('#f_cp').onclick=()=>{sel.path=[];setCorner(sel);change()};$('#f_copy').onclick=copySel;pb();
+ $('#f_dup').onclick=()=>{const c=JSON.parse(JSON.stringify(sel));c.id=S.id++;c.x+=30;c.y+=30;c.path=[];delete c.g;items().push(c);sel=c;change();panel()}}
+// tabla de cámaras del plano
+function list(){
+ const cams=items().filter(i=>i.type==='cam');
+ $('#sl').innerHTML=cams.map(c=>`<tr data-id="${c.id}" class="${c===sel||ms.includes(c)?'sel':''}"><td>${esc(c.label)}</td><td>${c.lens}mm<br><span class="hint">${(hfov(c.lens)/rad).toFixed(0)}° H</span>${c.pnl?'<br><span class="hint">PNL '+c.pnl+'</span>':''}${c.alt||c.ang?'<br><span class="hint">'+apTxt(c,' · ')+'</span>':''}</td><td><input value="${esc(c.note)}" placeholder="plano, movimiento…"></td></tr>`).join('')||'<tr><td colspan=3 class="hint">Sin cámaras.</td></tr>'}
+$('#sl').onclick=e=>{const r=e.target.closest('tr');if(r&&r.dataset.id){sel=items().find(i=>i.id==r.dataset.id);ms=[];panel();draw();list()}};
+$('#sl').oninput=e=>{const r=e.target.closest('tr'),c=items().find(i=>i.id==r.dataset.id);if(c){c.note=e.target.value;save();snap(true)}};
+// Línea de tiempo: escenas con sus planos
+function timeline(){
+ const tl=$('#tl');tl.innerHTML='';
+ S.scenes.forEach((s,si)=>{
+  const d=document.createElement('div');d.className='sc'+(si===S.cur?' cur':'');
+  d.innerHTML=`<div class="sn" data-si="${si}">${si+1}. ${esc(s.name)}</div><div class="ps"></div>`;
+  const ps=d.querySelector('.ps');
+  s.planos.forEach((p,pi)=>{
+   const t=document.createElement('div');t.className='pt'+(si===S.cur&&pi===s.cur?' cur':'');t.dataset.si=si;t.dataset.pi=pi;
+   const c=document.createElement('canvas');c.width=256;c.height=164;const g=c.getContext('2d');g.scale(.256,.256);render(g,p.items,null);
+   t.appendChild(c);t.insertAdjacentHTML('beforeend',`<span>${esc(p.name)}</span>`);ps.appendChild(t)});
+  ps.insertAdjacentHTML('beforeend',`<button class="add" data-np="${si}" title="Añadir plano a esta escena">+ Plano</button>`);
+  tl.appendChild(d)});
+ tl.insertAdjacentHTML('beforeend','<button class="add" id="bNs">+ Escena</button><span class="cr">Planta de Cámara · © Charlie Martínez 2023 · GPLv2 · <button class="agr" type="button">Agradecimientos</button></span>');
+ const cur=tl.querySelector('.sc.cur');if(cur&&!drag){const w=$('#tlw');if(cur.offsetLeft<w.scrollLeft||cur.offsetLeft+cur.offsetWidth>w.scrollLeft+w.clientWidth)w.scrollLeft=cur.offsetLeft-8}}
+$('#tl').onclick=e=>{
+ const np=e.target.closest('[data-np]');
+ if(np){const s=S.scenes[+np.dataset.np];s.planos.push(newPlano('Plano '+(s.planos.length+1)));S.cur=+np.dataset.np;s.cur=s.planos.length-1;sel=null;ms=[];snap();return refresh()}
+ if(e.target.id==='bNs'){S.scenes.push(newScene('Escena '+(S.scenes.length+1)));S.cur=S.scenes.length-1;sel=null;ms=[];snap();return refresh()}
+ const t=e.target.closest('.pt');
+ if(t){S.cur=+t.dataset.si;sc().cur=+t.dataset.pi;sel=null;ms=[];return refresh()}
+ const n=e.target.closest('.sn');if(n){S.cur=+n.dataset.si;sel=null;ms=[];refresh()}};
+// vuelve a pintar todo (cambio de escena o plano, deshacer, abrir archivo)
+function refresh(){
+ $('#scName').value=sc().name;$('#scNotes').value=sc().notes;$('#plName').value=pl().name;$('#proj').value=S.proj||'';
+ panel();list();draw();timeline();save()}
+$('#scName').oninput=e=>{sc().name=e.target.value;timeline();save();snap(true)};
+$('#scNotes').oninput=e=>{sc().notes=e.target.value;save();snap(true)};
+$('#plName').oninput=e=>{pl().name=e.target.value;timeline();save();snap(true)};
+$('#proj').oninput=e=>{S.proj=e.target.value;save();snap(true)};
+// botón con doble confirmación: el primer clic pide '¿Seguro?'
+function sure(b,label,fn){if(b._t){clearTimeout(b._t);b._t=0;b.textContent=label;fn();return}
+ b.textContent='¿Seguro?';b._t=setTimeout(()=>{b.textContent=label;b._t=0},3000)}
+$('#bDs').onclick=()=>{const c=JSON.parse(JSON.stringify(sc()));c.name+=' (copia)';S.scenes.splice(S.cur+1,0,c);S.cur++;sel=null;ms=[];snap();refresh()};
+$('#bXs').onclick=e=>sure(e.target,'Eliminar escena',()=>{
+ if(S.scenes.length>1){S.scenes.splice(S.cur,1);S.cur=Math.max(0,S.cur-1)}else S.scenes[0]=newScene('Escena 1');sel=null;ms=[];snap();refresh()});
+$('#bDp').onclick=()=>{const c=JSON.parse(JSON.stringify(pl()));c.name=contName(c.name);sc().planos.splice(sc().cur+1,0,c);sc().cur++;sel=null;ms=[];snap();refresh()};
+$('#bXp').onclick=e=>sure(e.target,'Eliminar plano',()=>{
+ const s=sc();if(s.planos.length>1){s.planos.splice(s.cur,1);s.cur=Math.max(0,s.cur-1)}else s.planos[0]=newPlano('Plano 1');sel=null;ms=[];snap();refresh()});
+// Archivo
+// mensaje corto junto a los botones de arriba
+const msg=t=>{$('#msg').textContent=t;setTimeout(()=>$('#msg').textContent='',4000)};
+$('#bSave').onclick=()=>{pend=stamp();if(!window.QPC_DESKTOP){clean=pend;pend=null}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download=(S.proj||'plantas-de-camara')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('#bLoad').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(s=>{try{const d=norm(JSON.parse(s));if(!d)throw 0;S=d;sel=null;ms=[];snap();refresh();clean=stamp()}catch(x){msg('Archivo no válido')}});e.target.value=''};
+// PDF generado directamente (sin diálogo de impresión): A4 apaisada, con varias plantas por hoja (4 columnas, filas de altura variable) o una planta por hoja
+const WANSI={'€':128,'…':133,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,'—':151,'™':153};
+// el PDF usa codificación WinAnsi; lo que no entra se cambia por '?'
+const enc=s=>{const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);u[i]=WANSI[s[i]]||(c<256?c:63)}return u};
+const pesc=s=>String(s).replace(/[\\()]/g,'\\$&').replace(/[\r\n]+/g,' ');
+const mctx=document.createElement('canvas').getContext('2d');
+const tw=(s,sz,b)=>{mctx.font=(b?'bold ':'')+sz+'px Helvetica,Arial,"Liberation Sans",sans-serif';return mctx.measureText(s).width*1.03};
+// parte un texto en líneas que quepan en mw puntos de ancho
+function wrapW(t,mw,sz,b){const out=[];String(t||'').split(/\n+/).forEach(par=>{let l='';
+ for(let w of par.split(/\s+/)){if(!w)continue;
+  while(tw(w,sz,b)>mw){let k=w.length;while(k>1&&tw(w.slice(0,k),sz,b)>mw)k--;if(l){out.push(l);l=''}out.push(w.slice(0,k));w=w.slice(k)}
+  const c=l?l+' '+w:w;if(l&&tw(c,sz,b)>mw){out.push(l);l=w}else l=c}
+ if(l)out.push(l)});return out}
+// convierte cada plano en una imagen JPG para meterla en el PDF
+function collect(scope,fmt){const k2=fmt==='single'?2:1,out=[];
+ (scope==='one'?[S.cur]:S.scenes.map((_,i)=>i)).forEach(si=>{const s=S.scenes[si];
+  s.planos.forEach((p,pi)=>{
+   const c=document.createElement('canvas');c.width=W*k2;c.height=H*k2;const g=c.getContext('2d');g.scale(k2,k2);render(g,p.items,null);
+   const b=atob(c.toDataURL('image/jpeg',.92).split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+   const cams=p.items.filter(x=>x.type==='cam').map(x=>x.label.replace(/^Cámara /,'')+' '+x.lens+'mm'+(x.pnl?' PNL '+x.pnl:'')+(x.alt||x.ang?' ['+apTxt(x,'/')+']':'')+(x.note?' ('+x.note+')':''));
+   out.push({jpg:u,pw:W*k2,ph:H*k2,title:(si+1)+'. '+s.name+(s.planos.length>1?' - '+p.name:''),cams,notes:pi===0?s.notes:''})})});
+ return out}
+// reparte los planos en las páginas del PDF
+function layoutPdf(P,fmt){
+ const PW=842,PH=595,M=28,top=M+24,pages=[];const np=()=>{const a=[];pages.push(a);return a};
+ const sumH=ls=>ls.reduce((a,l)=>a+l.lh,0);
+ if(fmt==='single'){const aw=PW-2*M;
+  P.forEach((p,i)=>{
+   let ls=wrapW(p.title,aw,12,1).map(t=>({t,f:2,sz:12,lh:15}));
+   p.cams.forEach(c=>wrapW(c,aw,9).forEach(t=>ls.push({t,f:1,sz:9,lh:12})));
+   wrapW(p.notes,aw,9).forEach(t=>ls.push({t,f:1,sz:9,lh:12}));
+   const room=PH-top-M-6-220,first=[];let used=0;
+   while(ls.length&&used+ls[0].lh<=room){used+=ls[0].lh;first.push(ls.shift())}
+   const ih=Math.min(aw*p.ph/p.pw,PH-top-M-8-used),iw=ih*p.pw/p.ph;
+   np().push({i,x:M+(aw-iw)/2,y:top,iw,ih,ls:first,tx:M,ty:top+ih+first[0].sz+3});
+   while(ls.length){const chunk=[];let u=0;while(ls.length&&u+ls[0].lh<=PH-top-M){u+=ls[0].lh;chunk.push(ls.shift())}
+    np().push({i:-1,ls:chunk,tx:M,ty:top+chunk[0].sz})}})}
+ else{const cols=4,gx=8,gy=10,cw=(PW-2*M-gx*(cols-1))/cols;let y=top,pg=null;
+  for(let r0=0;r0<P.length;r0+=cols){
+   const row=P.slice(r0,r0+cols).map((p,c)=>{const ls=wrapW(p.title,cw,8.5,1).map(t=>({t,f:2,sz:8.5,lh:9.5}));
+    wrapW(p.cams.join(' · '),cw,7).forEach(t=>ls.push({t,f:1,sz:7,lh:8.5}));wrapW(p.notes,cw,7).forEach(t=>ls.push({t,f:1,sz:7,lh:8.5}));
+    return{p,i:r0+c,c,ls,ih:cw*p.ph/p.pw}});
+   const ih=row[0].ih;let th=Math.max(...row.map(o=>sumH(o.ls)));
+   if(!pg||y+ih+4+th>PH-M){if(pg&&y>top){pg=np();y=top}else if(!pg){pg=np();y=top}}
+   const room=PH-M-(y+ih+4);
+   const rest=[]; // texto que no cabe debajo del dibujo: sigue en páginas aparte, sin cortar nada
+   row.forEach(o=>{const keep=[];let u=0;while(o.ls.length&&(u+o.ls[0].lh<=room||!keep.length)){u+=o.ls[0].lh;keep.push(o.ls.shift())}
+    if(o.ls.length)rest.push({title:P[o.i].title,t:o.ls.map(l=>l.t).join(' ')});o.ls=keep});
+   row.forEach(o=>pg.push({i:o.i,x:M+o.c*(cw+gx),y,iw:cw,ih:o.ih,ls:o.ls,tx:M+o.c*(cw+gx),ty:y+o.ih+o.ls[0].sz+2}));
+   y+=ih+4+Math.max(...row.map(o=>sumH(o.ls)))+gy;
+   if(rest.length){rest.forEach(r=>{const ls=[{t:r.title+' (continuación del texto)',f:2,sz:10,lh:13}].concat(wrapW(r.t,PW-2*M,9).map(t=>({t,f:1,sz:9,lh:11.5})));
+     while(ls.length){const chunk=[];let u=0;while(ls.length&&(u+ls[0].lh<=PH-top-M||!chunk.length)){u+=ls[0].lh;chunk.push(ls.shift())}np().push({i:-1,ls:chunk,tx:M,ty:top+chunk[0].sz})}});
+    pg=null}}}
+ return pages}
+// arma el PDF a mano: objetos, imágenes y tabla de referencias
+function buildPdf(P,fmt){
+ const PW=842,PH=595,M=28,pages=layoutPdf(P,fmt),npg=Math.max(1,pages.length);
+ const parts=[],off=[];let pos=0;const put=u=>{parts.push(u);pos+=u.length};
+ const objS=(id,s)=>{off[id]=pos;put(enc(`${id} 0 obj\n${s}\nendobj\n`))};
+ const m=P.length,pb=5+m;
+ put(enc('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'));
+ objS(1,'<< /Type /Catalog /Pages 2 0 R >>');
+ objS(2,`<< /Type /Pages /Kids [${Array.from({length:npg},(_,p)=>(pb+2*p+1)+' 0 R').join(' ')}] /Count ${npg} >>`);
+ objS(3,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+ objS(4,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+ P.forEach((p,i)=>{off[5+i]=pos;put(enc(`${5+i} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.pw} /Height ${p.ph} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpg.length} >>\nstream\n`));put(p.jpg);put(enc('\nendstream\nendobj\n'))});
+ for(let pg=0;pg<npg;pg++){
+  const sl=pages[pg]||[];
+  const T=(f,sz,x,yt,s)=>`BT /F${f} ${sz} Tf ${x.toFixed(2)} ${(PH-yt).toFixed(2)} Td (${pesc(s)}) Tj ET\n`;
+  let c='0 g\n'+T(2,11,M,M+8,S.proj||'Planta de cámara')+T(1,9,PW-M-80,M+8,'Página '+(pg+1)+' / '+npg);
+  c+=`0.8 w 0 G ${M} ${PH-(M+16)} m ${PW-M} ${PH-(M+16)} l S\n`;
+  sl.forEach(o=>{
+   if(o.i>=0){const yb=(PH-o.y-o.ih).toFixed(2);
+    c+=`q ${o.iw.toFixed(2)} 0 0 ${o.ih.toFixed(2)} ${o.x.toFixed(2)} ${yb} cm /Im${o.i} Do Q\n`;
+    c+=`0.5 w 0.3 G ${o.x.toFixed(2)} ${yb} ${o.iw.toFixed(2)} ${o.ih.toFixed(2)} re S\n0 g\n`}
+   let ty=o.ty;o.ls.forEach(l=>{c+=T(l.f,l.sz,o.tx,ty,l.t);ty+=l.lh})});
+  const cid=pb+2*pg,cu=enc(c);
+  off[cid]=pos;put(enc(`${cid} 0 obj\n<< /Length ${cu.length} >>\nstream\n`));put(cu);put(enc('\nendstream\nendobj\n'));
+  objS(cid+1,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Contents ${cid} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << ${sl.filter(o=>o.i>=0).map(o=>`/Im${o.i} ${5+o.i} 0 R`).join(' ')} >> >> >>`)}
+ const n=pb+2*npg,xr=pos;let x='xref\n0 '+n+'\n0000000000 65535 f \n';
+ for(let i=1;i<n;i++)x+=String(off[i]).padStart(10,'0')+' 00000 n \n';
+ put(enc(x+`trailer\n<< /Size ${n} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF\n`));
+ return new Blob(parts,{type:'application/pdf'})}
+$('#bPdf').onclick=()=>{
+ try{const fmt=$('#pf').value,url=URL.createObjectURL(buildPdf(collect($('#pr').value,fmt),fmt)),name=(S.proj||'plantas-de-camara')+'.pdf';
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+  $('#msg').innerHTML=`PDF generado · <a href="${url}" target="_blank" download="${esc(name)}">abrir o descargar de nuevo</a>`}
+ catch(e){console.error(e);msg('No se pudo generar el PDF')}};
+$('#bUndo').onclick=()=>goHist(-1);$('#bRedo').onclick=()=>goHist(1);
+document.addEventListener('keydown',e=>{
+ if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+ if(/INPUT|TEXTAREA/.test(e.target.tagName))return;
+ const kk=e.key.toLowerCase();
+ if((kk==='z'&&!e.shiftKey)||kk==='d'){e.preventDefault();goHist(-1)}
+ else if((kk==='z'&&e.shiftKey)||kk==='y'){e.preventDefault();goHist(1)}
+ else if((root.contains(e.target)||e.target===document.body)&&e.target.tagName!=='SELECT'){
+  if(kk==='c'&&selAll().length){e.preventDefault();copySel()}
+  else if(kk==='v'&&clip.length){e.preventDefault();paste()}
+  else if(kk==='a'){e.preventDefault();setSel(items().slice());panel();list();draw()}}});
+// lista de la ventana de agradecimientos
+const AG=['Gráfico que representa la altura y la angulación de la cámara (normal, normal alta, cenital, picada alta, contrapicada baja, etc.).',
+ 'Poder agrupar elementos y duplicarlos juntos, o copiarlos y pegarlos juntos, incluso entre escenas.',
+ 'Al duplicar un plano, que se renombre con «(cont)» de continuación y no con «(copia)».',
+ 'Al generar el PDF, elegir entre varias plantas por página o una planta por página.',
+ 'Que toda la información de una cámara, aunque sea mucha, se muestre completa en el PDF.',
+ 'Indicar cuántos paneles (PNL) usa cada cámara, porque en storyboard una misma cámara suele llevar varios paneles; y que los nombres sean editables para que cada cual los adapte a su forma de trabajar.',
+ 'Flechas de movimiento editables como curvas, para los desplazamientos curvos de personajes o cámaras.'];
+// abrir y cerrar la ventana de agradecimientos
+function agOpen(){const m=$('#agm');m.querySelector('ol').innerHTML=AG.map(t=>`<li>${esc(t)}</li>`).join('');m.hidden=false;$('#agx').focus()}
+function agClose(){$('#agm').hidden=true}
+root.addEventListener('click',e=>{if(e.target.closest('.agr'))agOpen();else if(e.target.id==='agx'||e.target.id==='agm')agClose()});
+root.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#agm').hidden){agClose();e.stopPropagation()}},true);
+cv.tabIndex=0;cv.style.outline='none';setTool('select');size();snap();refresh();clean=stamp();if(window.ResizeObserver)new ResizeObserver(size).observe($('#wrap'));
+})();
+}catch(e){
+console.error(e);var d=document.createElement("div");d.style.cssText="padding:12px;background:#fff;color:#b00020;font:13px monospace;white-space:pre-wrap";
+d.textContent="Error al iniciar la planta de cámara: "+(e&&e.message)+"\n"+String(e&&e.stack||"").split("\n").slice(0,3).join("\n");root.insertBefore(d,root.firstChild)}
+})();
+</script>
+</body>
+</html>
